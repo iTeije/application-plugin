@@ -2,6 +2,7 @@ package eu.iteije.apps.listeners;
 
 import org.bukkit.*;
 import org.bukkit.block.Block;
+import org.bukkit.entity.FallingBlock;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -95,7 +96,15 @@ public class PlayerInteractListener implements Listener {
 
         // Spinach clumps
         if (action == Action.LEFT_CLICK_AIR) {
+            // Clone the player location and add eye-height to the y axis
+            Location clone = playerLocation.clone();
+            clone.add(0, 1.5, 0);
 
+            FallingBlock block = world.spawnFallingBlock(clone, Material.GREEN_TERRACOTTA.createBlockData());
+            block.setDropItem(false);
+
+            Vector direction = player.getEyeLocation().getDirection();
+            block.setVelocity(direction.multiply(new Vector(1.5, 1.25, 1.5)));
         }
 
     }

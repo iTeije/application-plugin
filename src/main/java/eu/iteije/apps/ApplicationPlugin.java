@@ -1,6 +1,7 @@
 package eu.iteije.apps;
 
 import eu.iteije.apps.commands.VortexCommand;
+import eu.iteije.apps.listeners.EntityChangeBlockListener;
 import eu.iteije.apps.listeners.PlayerInteractListener;
 import eu.iteije.apps.listeners.PlayerJoinListener;
 import org.bukkit.plugin.PluginManager;
@@ -17,6 +18,7 @@ public final class ApplicationPlugin extends JavaPlugin {
         PlayerJoinListener joinListener = new PlayerJoinListener();
         manager.registerEvents(joinListener, this);
         manager.registerEvents(new PlayerInteractListener(joinListener.getWand()), this);
+        manager.registerEvents(new EntityChangeBlockListener(), this);
 
     }
 
