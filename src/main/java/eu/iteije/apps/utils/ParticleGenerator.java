@@ -18,34 +18,87 @@ public class ParticleGenerator {
         this.scheduler = plugin.getServer().getScheduler();
     }
 
+    /**
+     * Spawn a stationary vortex for a certain amount of seconds and respawn it every given amount of ticks.
+     *
+     * To make it look smooth, lowering the {@param respawnInTicks} parameter will make it respawn more often and thus make it smoother.
+     * In order to prevent issues with this method, I advise against keeping the same density, as it is not needed as more
+     *   particles will be spawned anyways and it will significantly improve performance.
+     *
+     * @param particle particle to use in the vortex
+     * @param spawn location the vortex will spin/build around
+     * @param baseRadius radius from the spawn location to the first particle
+     * @param widthGrowth the exponent to grow the vortex with (updated in this method, might want to take a look at that)
+     * @param maxHeight the height the vortex will reach from the spawn point
+     * @param spacing amount of spacing (in blocks) in between each 'row' of particles
+     * @param density how densely packed the particles are (1-20 recommended)
+     * @param stay amount of seconds the vortex should be visible in seconds
+     * @param respawnInTicks amount of ticks in between every vortex
+     */
     public void spawnTimedVortex(Particle particle, Location spawn, float baseRadius, float widthGrowth, float maxHeight, float spacing,
                                  int density, int stay, int respawnInTicks) {
+        // Make sure the vortex is visible for at least a second
         if (stay < 0) stay = 1;
+        // Keep track of the current time of visibility
         AtomicInteger secs = new AtomicInteger();
 
+        // Calculate the amount of executions before hitting the given visibility time
         int finalStay = stay * (20 / respawnInTicks);
+
+        // Create and run a bukkit scheduler and execute it every given amount of ticks
         int id = scheduler.scheduleSyncRepeatingTask(plugin, () -> {
+            // Exit requirement
             if (secs.get() >= finalStay) return;
 
+            // Spawn the stationary vortex
             this.spawnVortex(particle, spawn, baseRadius, widthGrowth, maxHeight, spacing, 0, density, 80);
+
+            // Update the current visibility time
             secs.getAndIncrement();
         }, 0L, respawnInTicks);
 
+        // Cancel the vortex spawns
         scheduler.runTaskLater(plugin, () -> scheduler.cancelTask(id), stay * 20L);
     }
 
+    /**
+     * Spawn a spinning vortex and edit its main properties by tweaking the speed and duration parameters.
+     * The {@param densityChange} parameter is a very useful parameter to use when you want to make the vortex
+     *   a little less static, as every side parallel to each other when not changed. The higher (20-99 recommended) this variable, the denser
+     *   the vortex will get higher up.
+     *
+     * @param particle particle to use in the vortex
+     * @param spawn location the vortex will spin/build around
+     * @param baseRadius radius from the spawn location to the first particle
+     * @param widthGrowth the exponent to grow the vortex with (updated in this method, might want to take a look at that)
+     * @param maxHeight the height the vortex will reach from the spawn point
+     * @param spacing amount of spacing (in blocks) in between each 'row' of particles
+     * @param speed speed to spin the vortex with, utilizing the offset in degrees (1 - 20)
+     * @param duration how long to spin the vortex for in seconds
+     * @param density how densely packed the particles are (1-20 recommended)
+     * @param densityChange the change in density the higher the vortex reaches (max 100)
+     */
     public void spawnSpinningVortex(Particle particle, Location spawn, float baseRadius, float widthGrowth, float maxHeight, float spacing,
                                     float speed, int duration, int density, int densityChange) {
+        // Holder for keeping track of the current offset
         AtomicReference<Float> totalOffset = new AtomicReference<>(0.1f);
+
+        // Create and run a bukkit runnable and execute it a given amount of time every second (up to 20, which is the maximum TPS)
         int id = scheduler.scheduleSyncRepeatingTask(plugin, () -> {
+            // Spawn the vortex with the current offset
             this.spawnVortex(particle, spawn, baseRadius, widthGrowth, maxHeight, spacing, totalOffset.get(), density, densityChange);
+
+            // Update total offset, applying it to the next vortex
             totalOffset.updateAndGet(v -> v + 1f);
         }, 0L, (int) (20 / speed));
 
+        // Cancel the vortex spawn task after the given amount of time
         scheduler.runTaskLater(plugin, () -> scheduler.cancelTask(id), duration * 20L);
     }
 
     /**
+     * Spawn a vortex.
+     *
      * @param particle particle to use in the vortex
      * @param spawn location the vortex will spin/build around
      * @param baseRadius radius from the spawn location to the first particle
@@ -54,7 +107,7 @@ public class ParticleGenerator {
      * @param spacing amount of spacing (in blocks) in between each 'row' of particles
      * @param offset the offset in degrees, ignoring the ratio
      * @param density how densely packed the particles are (1-20 recommended)
-     * @param densityChange the change in density the higher the vortex reaches (max 100)
+     * @param densityChange the change in density the higher the vortex reaches (20-99 recommended)
      */
     public void spawnVortex(Particle particle, Location spawn, float baseRadius, float widthGrowth, float maxHeight, float spacing,
                             float offset, int density, int densityChange) {
@@ -64,6 +117,7 @@ public class ParticleGenerator {
         // Calculate what distance to add to each particles y axis
         // When the density is lower than a 100%, the ratio affects the height, since height is added to the currentHeight variable
         //   each time a particle spawns
+        float originalSpacing = spacing;
         spacing = (spacing / 360) * ratio;
         // Calculate the amount of rotations needed to reach the given max height
         int rotations = (int) Math.ceil(maxHeight / spacing);
@@ -92,7 +146,7 @@ public class ParticleGenerator {
                 spawn.getWorld().spawnParticle(particle, spawn.clone().add(x, currentHeight, z), 0);
 
                 // Increase the radius from the next particle to the center
-                widthGrowth += (currentHeight / maxHeight) / (maxHeight / spacing);
+                widthGrowth += (currentHeight / maxHeight / 2) / (maxHeight / spacing);
                 // Add height to the next particle (this will affect the location on the x and y axis)
                 currentHeight += spacing;
             }
@@ -101,7 +155,13 @@ public class ParticleGenerator {
             //   because it might get a little whacky using it on either extremely large, or extremely small vortexes
             offset = offset / 1.1f;
             // Change the density of particles the wider the vortex gets in order to prevent unwanted empty space in spinning vortexes
-            ratio = ratio / (100 / densityChange);
+            int difference = 100 - density;
+            if (difference != 0) {
+                ratio = (int) (100 / (difference * (1d / densityChange)));
+                spacing = (originalSpacing / 360) * ratio;
+            }
+
+            if (currentHeight >= maxHeight) break;
         }
     }
 
