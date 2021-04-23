@@ -25,7 +25,7 @@ public class VortexCommand implements CommandExecutor {
 
         Player player = (Player) sender;
 
-        this.generator.spawnTimedVortex(Particle.CLOUD, player.getLocation(), 2.5f, .08f, 30, 2f, 15, 5, 10);
+        this.generator.spawnSpinningVortex(Particle.CLOUD, player.getLocation(), 2.5f, .08f, 30, 3f, 15, 10, 2, 80);
 
         return true;
     }
