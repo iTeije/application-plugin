@@ -22,9 +22,15 @@ public class PlayerJoinListener implements Listener {
         ItemStack wand = new ItemStack(Material.STICK);
         ItemMeta meta = wand.getItemMeta();
         if (meta != null) {
-            meta.setDisplayName(translate("&a&lSpinach Wand"));
+            meta.setDisplayName(translate("&a&lSpinach Beam"));
             meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
-            meta.setLore(translate("&7", "&7This tool allows you to throw clumps of", "&7spinach up to &e50 &7blocks away."));
+            meta.setLore(translate(
+                    "&7",
+                    "&7This tool allows you to throw clumps of",
+                    "&7spinach up to &e50 &7blocks away.",
+                    "&7",
+                    "&eLeft-click to throw spinach.",
+                    "&bRight-click to use your destructive laser beam."));
             wand.setItemMeta(meta);
 
             this.wand = wand;
