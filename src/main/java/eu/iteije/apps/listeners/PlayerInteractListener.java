@@ -100,9 +100,11 @@ public class PlayerInteractListener implements Listener {
             Location clone = playerLocation.clone();
             clone.add(0, 1.5, 0);
 
+            // Spawn a new green terracotta block as an instance of FallingBlock and make sure the block can not be picked up mid air
             FallingBlock block = world.spawnFallingBlock(clone, Material.GREEN_TERRACOTTA.createBlockData());
             block.setDropItem(false);
 
+            // Set velocity to the block
             Vector direction = player.getEyeLocation().getDirection();
             block.setVelocity(direction.multiply(new Vector(1.5, 1.25, 1.5)));
         }
