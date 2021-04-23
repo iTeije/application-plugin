@@ -1,0 +1,7 @@
+name: Application Plugin
+version: ${project.version}
+main: eu.iteije.apps.ApplicationPlugin
+api-version: 1.16
+authors: [ iTeije ]
+description: A Minecraft plugin utilizing Vector math, algebra and basic geometry to create a wide variety of effects
+website: https://iteije.eu
