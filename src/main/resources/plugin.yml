@@ -1,7 +1,12 @@
-name: Application Plugin
+name: ApplicationPlugin
 version: ${project.version}
 main: eu.iteije.apps.ApplicationPlugin
 api-version: 1.16
 authors: [ iTeije ]
 description: A Minecraft plugin utilizing Vector math, algebra and basic geometry to create a wide variety of effects
 website: https://iteije.eu
+
+commands:
+  vortex:
+    usage: /<command>
+    description: Spawn a vortex
